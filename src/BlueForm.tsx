@@ -2,7 +2,7 @@ import * as React from 'react';
 
 type TRenderCompoent = (
   handler: object,
-  setFieldValidator: Function
+  validator: object
 ) => React.ComponentClass | React.SFC;
 
 interface IState {
@@ -31,12 +31,23 @@ export default function BlueForm(options: object) {
       }
 
       setFieldValidator = (validator: Function) => {
-        this.filedValidators.concat(validator);
+        this.filedValidators = this.filedValidators.concat([validator]);
+      }
+
+      valiate = (): boolean => {
+        return this.filedValidators.every(validator => validator());
       }
 
       onSubmit = (event: MouseEvent) => {
         event.preventDefault();
-        if (!this.state.isValid) return console.log('errors');
+        const reuslt = this.valiate();
+        if (reuslt) {
+          console.log('done');
+        } else {
+          console.log('fail');
+        }
+
+        this.setState({ isValid: reuslt });
       }
 
       render() {
@@ -44,7 +55,11 @@ export default function BlueForm(options: object) {
           onSubmit: this.onSubmit,
         };
 
-        return renderComponent(handlers, this.setFieldValidator);
+        const validator = {
+          setFieldValidator: this.setFieldValidator,
+        };
+
+        return renderComponent(handlers, validator);
       }
     }
   }

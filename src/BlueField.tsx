@@ -1,46 +1,39 @@
 import * as React from 'react';
+import omit from './utils/omit';
 
 interface IState {
   isValid: boolean;
-  value: any;
+  value: string;
 }
 
 interface IProps {
-  setFieldValidator(isValid: Function): void;
+  validator: {
+    setFieldValidator: Function;
+  };
 }
 
 export default function BulueField() {
   return (renderComponent: Function) => {
     return class extends React.Component<IProps, IState> {
       private value: any;
-      private mergedProps: object;
       state: IState;
 
       constructor(props: IProps) {
         super(props);
-        const { setFieldValidator, ..._props } = this.props;
-        this.state = { isValid: false };
-        this.mergedProps = {
-          value: this.state.value,
-          onChange: this.onChange,
-          onBlur: this.onBlur,
-          ..._props,
-        };
-
-        setFieldValidator(this.getValid);
+        this.state = { value: '', isValid: false };
+        this.props.validator.setFieldValidator(this.getValidedResult);
       }
 
       validate = (value: any): boolean => {
         return value ? true : false;
       }
 
-      getValid = (): boolean => {
+      getValidedResult = (): boolean => {
         return this.state.isValid;
       }
 
       onChange = (event: Event) => {
-        const { value } = event.target;
-        this.setState({ value });
+        this.setState({ value: event.target.value });
       }
 
       onBlur = () => {
@@ -49,7 +42,14 @@ export default function BulueField() {
       }
 
       render() {
-        return renderComponent(this.mergedProps);
+        const props = {
+          value: this.state.value,
+          onChange: this.onChange,
+          onBlur: this.onBlur,
+          ...omit(this.props, 'validator')
+        };
+
+        return renderComponent(props, this.state.isValid);
       }
     }
   }
